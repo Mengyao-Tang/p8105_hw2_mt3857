@@ -21,6 +21,7 @@ remotes::install_github("ropensci/rnoaa", force = TRUE)
 ```
 
 ```{r setup2, include=FALSE}
+#problem 1
 # Load the necessary libraries
 library(tidyverse)
 
@@ -85,6 +86,7 @@ cat("Number of ADA compliant A train stations:", num_ada_compliant_A_train, "\n"
 ```
 
 ```{r cars}
+#problem 2
 # Load necessary libraries
 library(tidyverse)
 library(readxl)
@@ -155,4 +157,120 @@ remote = origin
         merge = refs/heads/master
 name = Mengyao-Tang
         email = mengyaot24@gmail.com
+        # The dataset combines observations from multiple trash wheels, including Professor Trash Wheel and Gwynnda Trash Wheel,
+# resulting in a total of 845 observations. Each observation includes key variables such as the name of the trash wheel 
+# (trash_wheel), the number of dumpsters collected (dumpster), the weight of trash collected in tons (weight_tons), and 
+# the number of cigarette butts collected (cigarette_butts).
+
+# For example, Professor Trash Wheel collected a total of 216.26 tons of trash. Additionally, in June 2022, 
+# Gwynnda Trash Wheel collected a total of 18,120 cigarette butts. These data provide valuable insights into the volume 
+# and types of trash collected by these innovative systems.
+
 ```
+
+```{r cars1}
+#problem3
+# Load necessary libraries
+library(tidyverse)
+
+# Read in the datasets
+bakers <- read_csv("/Users/wan/Downloads/gbb_datasets-2/bakers.csv")
+bakes <- read_csv("/Users/wan/Downloads/gbb_datasets-2/bakes.csv")
+results <- read_csv("/Users/wan/Downloads/gbb_datasets-2/results.csv", skip = 1) %>%
+  rename_with(~c('series', 'episode', 'baker', 'technical', 'result')) %>%
+  filter(!is.na(series)) %>%
+  mutate(series = as.numeric(series), episode = as.numeric(episode))  # Convert 'series' and 'episode' to numeric
+
+# Ensure 'Series' and 'Episode' in bakes are also numeric
+bakes <- bakes %>%
+  mutate(Series = as.numeric(Series), Episode = as.numeric(Episode))
+
+# Merge bakers, bakes, and results datasets
+full_data <- bakes %>%
+  left_join(bakers, by = c("Baker" = "Baker Name", "Series" = "Series")) %>%
+  left_join(results, by = c("Series" = "series", "Episode" = "episode", "Baker" = "baker"))
+
+# Clean and organize the merged dataset
+final_data <- full_data %>%
+  select(Series, Episode, Baker, `Signature Bake`, `Show Stopper`, `Baker Age`, `Baker Occupation`, technical, result) %>%
+  arrange(Series, Episode)
+
+# Export the cleaned dataset to a CSV file
+write_csv(final_data, "/Users/wan/Downloads/gbb_datasets-2/final_bakeoff_data.csv")
+
+# Print first 10 rows to verify the merged dataset
+print(final_data, n = 10)
+
+# Filter and create a table showing Star Baker or winners for seasons 5 to 10
+star_baker_table <- final_data %>%
+  filter(result %in% c("STAR BAKER", "WINNER"), Series >= 5) %>%
+  arrange(Series, Episode) %>%
+  select(Series, Episode, Baker, result)
+
+# Print Star Baker or winners table
+print(star_baker_table)
+
+# Create a reader-friendly table using kable
+library(knitr)
+kable(star_baker_table, caption = "Star Baker or Winner of Each Episode (Seasons 5-10)")
+
+# Read and clean the viewers.csv data
+viewers <- read_csv("/Users/wan/Downloads/gbb_datasets-2/viewers.csv") %>%
+  pivot_longer(cols = starts_with("Series"), names_to = "series", values_to = "viewership") %>%
+  mutate(series = str_extract(series, "\\d+"), series = as.numeric(series))  # Convert series to numeric
+
+# Show first 10 rows of the cleaned viewers dataset
+viewers %>%
+  print(n = 10)
+
+# Calculate the average viewership for Season 1
+avg_viewers_s1 <- viewers %>%
+  filter(series == 1) %>%
+  summarize(avg_viewership = mean(viewership, na.rm = TRUE))
+
+# Calculate the average viewership for Season 5
+avg_viewers_s5 <- viewers %>%
+  filter(series == 5) %>%
+  summarize(avg_viewership = mean(viewership, na.rm = TRUE))
+
+# Print the average viewership for Season 1 and Season 5
+cat("The average viewership for Season 1 was", avg_viewers_s1$avg_viewership, "million.\n")
+cat("The average viewership for Season 5 was", avg_viewers_s5$avg_viewership, "million.\n")
+
+```
+
+#Data Cleaning Process:
+
+1.  **Data Import**:
+
+    -   The datasets `bakers.csv`, `bakes.csv`, and `results.csv` were imported using the `read_csv()` function. Each dataset contains key information about the bakers, their bakes, and the results of each episode.
+
+2.  **Handling Data Types**:
+
+    -   In the `results.csv` file, the columns `series` and `episode` were initially in character format. Since these columns should represent numeric values (series numbers and episode numbers), they were converted to numeric using the `mutate()` function. This was necessary to ensure smooth merging with other datasets, which had their `Series` and `Episode` columns in numeric format as well.
+
+3.  **Merging the Datasets**:
+
+    -   The three datasets were merged using `left_join()` on the common columns `Baker`, `Series`, and `Episode`. This allowed us to combine all the information about the bakers, their bakes, and the episode results into a single dataset, where each row represents a baker's performance in a specific episode.
+
+4.  **Filtering and Selecting Relevant Columns**:
+
+    -   After the merge, unnecessary columns were removed, and only the relevant columns (such as `Baker`, `Signature Bake`, `Show Stopper`, `technical rank`, and `result`) were kept for further analysis. This resulted in a clean dataset focused on the core aspects of the show.
+
+5.  **Exporting the Clean Dataset**:
+
+    -   The cleaned dataset was saved to a CSV file for easy access and further analysis.
+
+    The final dataset is well-organized and contains the following information for each episode-baker combination:
+
+    -   **Baker Name**.
+
+    -   **Signature Bake** and **Show Stopper** bakes.
+
+    -   **Technical Challenge Rank**.
+
+    -   **Episode Result** (such as whether the baker stayed, was eliminated, or won Star Baker).
+
+    This dataset is tidy, with each row representing an individual observation (a baker's performance in a given episode), and each column representing a specific variable (bakes, technical challenge results, etc.). This structure makes it easy to analyze bakers' performances across episodes and seasons.
+
+### 
