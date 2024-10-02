@@ -20,7 +20,7 @@ remotes::install_github("ropensci/rnoaa", force = TRUE)
 
 ```
 
-```{r setup, include=FALSE}
+```{r setup2, include=FALSE}
 # Load the necessary libraries
 library(tidyverse)
 
@@ -83,8 +83,6 @@ cat("Number of stations serving the A train:", num_stations_serve_A_train, "\n")
 cat("Number of ADA compliant A train stations:", num_ada_compliant_A_train, "\n")
 
 ```
-
-
 
 ```{r cars}
 # Load necessary libraries
