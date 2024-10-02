@@ -1,0 +1,160 @@
+---
+title: "p8105_hw2_mt3857."
+author: "Mengyao Tang"
+date: "2024-09-30"
+output: github_document
+---
+
+```{r setup, force = TRUE}
+install.packages(
+  c("tidyverse", "knitr", "rmarkdown", "janitor", "broom", "here", "readxl", 
+    "haven", "rnoaa", "ggridges", "ggthemes", "leaflet", "viridis", "skimr", 
+    "rvest", "httr", "flexdashboard", "devtools", "usethis", "modelr", "mgcv", 
+    "tidytext", "shiny", "patchwork", "glmnet", "plotly"))
+
+# Force reinstallation of the 'p8105.datasets' package
+remotes::install_github("p8105/p8105.datasets", force = TRUE)
+
+# Force reinstallation of the 'rnoaa' package
+remotes::install_github("ropensci/rnoaa", force = TRUE)
+
+```
+
+```{r setup, include=FALSE}
+# Load the necessary libraries
+library(tidyverse)
+
+# Load the dataset
+nyc_transit_data <- read_csv("/Users/wan/Downloads/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
+
+# Clean the column names and retain the relevant columns
+nyc_transit_clean <- nyc_transit_data %>%
+  janitor::clean_names() %>%
+  select(line, station_name, station_latitude, station_longitude, 
+         route1, route2, route3, route4, route5, 
+         entry, vending, entrance_type, ada)
+
+# Convert 'entry' to a logical variable (TRUE for 'YES', FALSE for 'NO')
+nyc_transit_clean <- nyc_transit_clean %>%
+  mutate(entry = ifelse(entry == "YES", TRUE, FALSE))
+
+# Pivot longer for the routes to gather all route columns into a single column
+nyc_transit_tidy <- nyc_transit_clean %>%
+  pivot_longer(
+    cols = starts_with("route"), 
+    names_to = "route_number", 
+    values_to = "route_name"
+  ) %>%
+  filter(!is.na(route_name))  # Remove rows with missing route names
+
+# Get the number of distinct stations (identified by both name and line)
+num_distinct_stations <- nyc_transit_tidy %>%
+  distinct(line, station_name) %>%
+  nrow()
+
+# Get the number of ADA compliant stations
+num_ada_compliant <- nyc_transit_tidy %>%
+  filter(ada == "YES") %>%
+  distinct(line, station_name) %>%
+  nrow()
+
+# Calculate the proportion of station entrances/exits without vending that allow entry
+proportion_no_vending_allow_entry <- nyc_transit_tidy %>%
+  filter(vending == "NO") %>%
+  summarize(proportion = mean(entry))
+
+# Get the number of distinct stations serving the A train
+num_stations_serve_A_train <- nyc_transit_tidy %>%
+  filter(route_name == "A") %>%
+  distinct(line, station_name) %>%
+  nrow()
+
+# Get the number of ADA compliant stations serving the A train
+num_ada_compliant_A_train <- nyc_transit_tidy %>%
+  filter(route_name == "A", ada == "YES") %>%
+  distinct(line, station_name) %>%
+  nrow()
+
+# Output the results
+cat("Number of distinct stations:", num_distinct_stations, "\n")
+cat("Number of ADA compliant stations:", num_ada_compliant, "\n")
+cat("Proportion of no vending entrances that allow entry:", proportion_no_vending_allow_entry$proportion, "\n")
+cat("Number of stations serving the A train:", num_stations_serve_A_train, "\n")
+cat("Number of ADA compliant A train stations:", num_ada_compliant_A_train, "\n")
+
+```
+
+
+
+```{r cars}
+# Load necessary libraries
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(lubridate)
+
+# Define the file path
+file_path <- "/Users/wan/Downloads/202309 Trash Wheel Collection Data.xlsx"
+
+# Read and clean the Mr. Trash Wheel data
+mr_trash_wheel <- read_excel(file_path, sheet = "Mr. Trash Wheel") %>%
+  janitor::clean_names() %>%
+  filter(!is.na(dumpster)) %>%
+  mutate(
+    weight_tons = round(weight_tons, 2),  # Use the correct column name 'weight_tons'
+    trash_wheel = "Mr. Trash Wheel",  # Add a variable to label the source of the data
+    year = as.numeric(year)  # Ensure 'year' is numeric
+  )
+
+# Read and clean the Professor Trash Wheel data
+prof_trash_wheel <- read_excel(file_path, sheet = "Professor Trash Wheel") %>%
+  janitor::clean_names() %>%
+  filter(!is.na(dumpster)) %>%
+  mutate(
+    weight_tons = round(weight_tons, 2),
+    trash_wheel = "Professor Trash Wheel",
+    year = as.numeric(year)  # Ensure 'year' is numeric
+  )
+
+# Read and clean the Gwynnda Trash Wheel data
+gwynnda <- read_excel(file_path, sheet = "Gwynnda Trash Wheel") %>%
+  janitor::clean_names() %>%
+  filter(!is.na(dumpster)) %>%
+  mutate(
+    weight_tons = round(weight_tons, 2),
+    trash_wheel = "Gwynnda Trash Wheel",
+    year = as.numeric(year)  # Ensure 'year' is numeric
+  )
+
+# Combine all datasets into a single dataset
+combined_trash_wheel <- bind_rows(mr_trash_wheel, prof_trash_wheel, gwynnda)
+
+# Output the number of rows in the combined dataset and provide examples of key variables
+cat("The combined dataset contains", nrow(combined_trash_wheel), "observations.\n")
+cat("For example, here are some key variables:\n")
+print(combined_trash_wheel %>% select(trash_wheel, dumpster, weight_tons, cigarette_butts))
+
+# Calculate the total weight of trash collected by Professor Trash Wheel
+total_weight_professor <- combined_trash_wheel %>%
+  filter(trash_wheel == "Professor Trash Wheel") %>%
+  summarize(total_weight = sum(weight_tons, na.rm = TRUE))
+
+cat("The total weight of trash collected by Professor Trash Wheel is:", total_weight_professor$total_weight, "tons.\n")
+
+# Calculate the total number of cigarette butts collected by Gwynnda in June 2022
+cigarette_butts_gwynnda_june_2022 <- combined_trash_wheel %>%
+  filter(trash_wheel == "Gwynnda Trash Wheel", year(date) == 2022, month(date) == 6) %>%
+  summarize(total_cigarette_butts = sum(cigarette_butts, na.rm = TRUE))
+
+cat("The total number of cigarette butts collected by Gwynnda in June 2022 is:", cigarette_butts_gwynnda_june_2022$total_cigarette_butts, "butts.\n")
+repositoryformatversion = 0
+        filemode = true
+        bare = false
+        logallrefupdates = true
+url = https://github.com/Mengyao-Tang/p8105_hw2_mt3857.git
+        fetch = +refs/heads/*:refs/remotes/origin/*
+remote = origin
+        merge = refs/heads/master
+name = Mengyao-Tang
+        email = mengyaot24@gmail.com
+```
