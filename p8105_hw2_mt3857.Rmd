@@ -5,19 +5,7 @@ date: "2024-09-30"
 output: github_document
 ---
 
-```{r setup, force = TRUE}
-install.packages(
-  c("tidyverse", "knitr", "rmarkdown", "janitor", "broom", "here", "readxl", 
-    "haven", "rnoaa", "ggridges", "ggthemes", "leaflet", "viridis", "skimr", 
-    "rvest", "httr", "flexdashboard", "devtools", "usethis", "modelr", "mgcv", 
-    "tidytext", "shiny", "patchwork", "glmnet", "plotly"))
-
-# Force reinstallation of the 'p8105.datasets' package
-remotes::install_github("p8105/p8105.datasets", force = TRUE)
-
-# Force reinstallation of the 'rnoaa' package
-remotes::install_github("ropensci/rnoaa", force = TRUE)
-
+```{}
 ```
 
 ```{r setup2, include=FALSE}
@@ -148,15 +136,10 @@ cigarette_butts_gwynnda_june_2022 <- combined_trash_wheel %>%
 
 cat("The total number of cigarette butts collected by Gwynnda in June 2022 is:", cigarette_butts_gwynnda_june_2022$total_cigarette_butts, "butts.\n")
 repositoryformatversion = 0
-        filemode = true
-        bare = false
-        logallrefupdates = true
-url = https://github.com/Mengyao-Tang/p8105_hw2_mt3857.git
-        fetch = +refs/heads/*:refs/remotes/origin/*
-remote = origin
-        merge = refs/heads/master
-name = Mengyao-Tang
-        email = mengyaot24@gmail.com
+        filemode = TRUE
+        bare = FALSE
+        logallrefupdates = TRUE
+
         # The dataset combines observations from multiple trash wheels, including Professor Trash Wheel and Gwynnda Trash Wheel,
 # resulting in a total of 845 observations. Each observation includes key variables such as the name of the trash wheel 
 # (trash_wheel), the number of dumpsters collected (dumpster), the weight of trash collected in tons (weight_tons), and 
